@@ -175,7 +175,7 @@ async def direct_responses(request: Request):
         return JSONResponse({"error": {"message": str(e)}}, status_code=500)
 
 
-@app.get("/health")
+@app.get("/healthcheck")
 async def health_check():
     return {"status": "operational", "sessions": session_manager.cleanup_expired()}
 
