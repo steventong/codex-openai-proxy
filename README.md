@@ -85,7 +85,7 @@ curl http://localhost:8000/v1/chat/completions \
     "model": "codex",
     "messages": [{"role": "user", "content": "帮我搜索最新的 Python 3.13 特性"}],
     "stream": true,
-    "user": "session_wanglin_001" 
+    "user": "session_id_1001" 
   }'
 ```
 > **注意**：传入 `user` 字段（或其他客户端的 `x-session-id` 头）将激活代理层的会话保持功能，有效利用缓存并避免频繁跨账号横跳。
