@@ -32,9 +32,6 @@ class DialogManager:
             rid = (event.get("response") or {}).get("id")
             if rid: state["last"] = rid
 
-    def get_last_reference(self, sid: str) -> Optional[str]:
-        return self._states.get(sid, {}).get("last")
-
     def cleanup_expired(self, ttl: int = 3600) -> int:
         now = time.time()
         expired = [k for k, v in self._states.items() if now - v["ts"] > ttl]

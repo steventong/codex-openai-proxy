@@ -8,7 +8,6 @@ from typing import Optional
 
 # Backend URLs
 GATEWAY_UPSTREAM = "https://chatgpt.com/backend-api/codex/responses"
-BACKEND_BASE = "https://api.openai.com/v1"
 
 # Auth
 KEY_CLIENT_ID = os.getenv("GATEWAY_CLIENT_ID", "app_EMoamEEZ73f0CkXaXp7hrann")

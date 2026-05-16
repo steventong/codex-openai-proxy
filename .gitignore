@@ -38,4 +38,6 @@ data/
 
 # OS
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
