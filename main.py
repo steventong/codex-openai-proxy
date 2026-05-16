@@ -109,50 +109,6 @@ async def chat_completions(request: Request):
         return JSONResponse({"error": {"message": str(e)}}, status_code=500)
 
 
-@app.post("/v1/completions")
-async def text_completions(request: Request):
-    try:
-        body = await request.json()
-        prompt = body.get("prompt", "")
-        chat_body = {
-            "model": body.get("model"),
-            "messages": [{"role": "user", "content": "".join(prompt) if isinstance(prompt, list) else prompt}],
-            "stream": body.get("stream", False),
-            "reasoning": body.get("reasoning")
-        }
-        ctx = orchestrator.transform_request(chat_body, request.headers.get("x-session-id", ""))
-        client = httpx.AsyncClient()
-        resp, _ = await orchestrator.execute_upstream(ctx["data"], ctx["sid"], client)
-        
-        if resp.status_code != 200:
-            content = await resp.aread()
-            await resp.aclose()
-            await client.aclose()
-            return JSONResponse(content=normalize_error(resp.status_code, content), status_code=resp.status_code)
-
-        ts = int(time.time())
-        if bool(body.get("stream", False)):
-            async def stream_output():
-                try:
-                    async for chunk in FlowAdapter.stream_response(resp, {"model": ctx["model_id"], "created": ts}): yield chunk
-                finally:
-                    await resp.aclose()
-                    await client.aclose()
-            return StreamingResponse(stream_output(), media_type="text/event-stream")
-        else:
-            try:
-                result = await FlowAdapter.sync_response(resp, {"model": ctx["model_id"], "created": ts})
-                return JSONResponse(result)
-            finally:
-                await resp.aclose()
-                await client.aclose()
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.error(f"Completions error: {str(e)}")
-        return JSONResponse({"error": {"message": str(e)}}, status_code=500)
-
-
 @app.post("/v1/responses")
 async def direct_responses(request: Request):
     try:
