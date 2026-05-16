@@ -15,7 +15,7 @@ A lightweight, self-hosted FastAPI proxy that exposes a standard OpenAI-compatib
 | **Automatic Token Refresh** | A background daemon silently refreshes tokens every ~45 minutes, keeping the proxy alive 24/7 without manual intervention. |
 | **OAuth Login Flow** | Web admin panel supports one-click login via the official Auth0 PKCE flow — no manual token copying needed. |
 | **Reasoning Compat** | Translates private `reasoning` / `summary` stream events into standard `<think>…</think>` tags understood by most clients. |
-| **OpenAI-compatible API** | Drop-in replacement for `https://api.openai.com/v1`. Point any OpenAI SDK or tool at `http://localhost:8000/v1`. |
+| **OpenAI-compatible API** | Drop-in replacement for `https://api.openai.com/v1`. Point any OpenAI SDK or tool at `http://localhost:8088/v1`. |
 | **Glassmorphism Admin UI** | Beautiful dark-mode web dashboard for managing accounts, monitoring status, and viewing live logs. |
 | **Docker-ready** | Single `docker compose up -d` to deploy. Cross-compiles to `linux/amd64` on Apple Silicon. |
 
@@ -31,10 +31,10 @@ pip install -r requirements.txt
 
 # 2. Start the proxy
 python main.py
-# → Listening on http://0.0.0.0:8000
+# → Listening on http://0.0.0.0:8088
 ```
 
-Then open **http://localhost:8000/admin** in your browser to log in and manage accounts.
+Then open **http://localhost:8088/admin** in your browser to log in and manage accounts.
 
 ### Option 2 — Docker Compose
 
@@ -48,7 +48,7 @@ The `data/` directory is mounted as a volume, so your account pool and session c
 
 ## 🖥️ Admin Dashboard
 
-Navigate to **http://localhost:8000/admin** after starting the service.
+Navigate to **http://localhost:8088/admin** after starting the service.
 
 From the dashboard you can:
 - **Login** new accounts via the official OAuth flow (no tokens to copy)
@@ -82,7 +82,7 @@ cp .env.example .env
 Drop-in replacement for the OpenAI Chat Completions endpoint.
 
 ```bash
-curl http://localhost:8000/v1/chat/completions \
+curl http://localhost:8088/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-5",
@@ -148,7 +148,7 @@ codex-openai-proxy/
 ## 🔒 Security Notes
 
 - **Account tokens are stored locally** in `data/accounts.json`. This file is excluded from git via `.gitignore`. Keep it safe.
-- The admin panel has **no built-in authentication**. If you expose port `8000` publicly, add a reverse proxy (e.g., Nginx basic auth) in front of `/admin` and `/api/*`.
+- The admin panel has **no built-in authentication**. If you expose port `8088` publicly, add a reverse proxy (e.g., Nginx basic auth) in front of `/admin` and `/api/*`.
 - The OAuth callback is bound to `http://localhost:1455/auth/callback`, which must be accessible from the machine running the proxy when performing the login flow.
 
 ---
