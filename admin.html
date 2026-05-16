@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex Proxy Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-grad-1: #0f172a;
+            --bg-grad-2: #1e1b4b;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.5;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background: #3b82f6; }
+        .blob-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #8b5cf6; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media(min-width: 768px) {
+            .container { grid-template-columns: 350px 1fr; }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        button.btn-danger { background: var(--danger); }
+        button.btn-danger:hover { background: #b91c1c; }
+        
+        button.btn-refresh { background: var(--warning); }
+        button.btn-refresh:hover { background: #d97706; }
+        
+        button.btn-small {
+            width: auto;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        /* Accounts List */
+        .account-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .account-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .account-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .account-id {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-active { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-cooldown { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .card-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: flex-end;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1rem;
+        }
+
+        .loader {
+            border: 2px solid var(--glass-border);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+            display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 50;
+        }
+
+        .toast {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-left: 4px solid var(--accent);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        /* Log Modal */
+        #log-modal {
+            display: none;
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 99;
+            backdrop-filter: blur(4px);
+        }
+
+        #log-content {
+            background: rgba(0,0,0,0.6);
+            padding: 1rem;
+            border-radius: 8px;
+            color: #a7f3d0;
+            flex: 1;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            border: 1px solid var(--glass-border);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 2rem;
+        }
+        
+        .header-container h1 {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="header-container">
+        <h1>Codex Proxy Dashboard</h1>
+        <button class="btn-small btn-refresh" style="width: auto; padding: 0.5rem 1.5rem;" onclick="openLogs()">View Logs</button>
+    </div>
+
+    <div class="container">
+        <!-- Add Account Panel -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 3rem 1.5rem;">
+            <h2>Connect Account</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">
+                Securely connect your OpenAI / Codex account using the official Auth0 authorization flow. No tokens or manual configuration required.
+            </p>
+            <button style="font-size: 1.1rem; padding: 1rem; background: linear-gradient(135deg, #10b981, #059669); max-width: 300px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onclick="loginWithChatGPT()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Login via ChatGPT
+            </button>
+        </div>
+
+        <!-- Accounts List Panel -->
+        <div class="glass-panel" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0; border: none; padding: 0;">Account Pool Status</h2>
+                <div id="session-counter" style="background: rgba(99, 102, 241, 0.2); color: var(--accent); padding: 0.2rem 0.8rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    Active Sessions: 0
+                </div>
+            </div>
+            <div class="loader" id="loader"></div>
+            <div class="account-list" id="account-list">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- API Endpoints Info Panel -->
+        <div class="glass-panel" style="grid-column: 1 / -1;">
+            <h2>Supported API Endpoints</h2>
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                <div style="background: rgba(0,0,0,0.2); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--glass-border);">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+                        <span style="background: var(--accent); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">POST</span>
+                        <code style="color: #60a5fa; font-size: 1.15rem; font-family: monospace; user-select: all;">http://127.0.0.1:8000/v1/chat/completions</code>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 0.5rem;">
+                        OpenAI 标准对话补全接口。你的所有第三方客户端、IDE 插件都可以直接将此地址填入 "Base URL / Endpoint" 配置项中（若只让填 Base URL，则填 <code>http://127.0.0.1:8000/v1</code>）。
+                    </p>
+                    <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-left: 1.5rem;">
+                        <li><strong>流式优先</strong>：强烈建议在请求中开启 <code>stream: true</code> 以获得最佳体验。</li>
+                        <li><strong>思考过程</strong>：对带有 Reasoning/Summary 的复杂思维模型，会自动抽取思考过程并组装为客户端兼容的 <code>&lt;think&gt;...&lt;/think&gt;</code> 标签。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Log Viewer Modal -->
+    <div id="modal-backdrop" onclick="closeLogs()"></div>
+    <div id="log-modal" class="glass-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; border: none; padding: 0;">System Logs (Live)</h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="fetchLogs()" class="btn-small btn-refresh">Refresh</button>
+                <button onclick="closeLogs()" class="btn-small btn-danger">Close</button>
+            </div>
+        </div>
+        <pre id="log-content">Loading logs...</pre>
+    </div>
+
+    <script>
+        const API_BASE = '/api/accounts';
+        const API_LOGS = '/api/logs';
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        async function fetchAccounts() {
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('account-list').innerHTML = '';
+            try {
+                const res = await fetch(API_BASE);
+                const data = await res.json();
+                document.getElementById('session-counter').innerText = `Active Sessions: ${data.session_count || 0}`;
+                renderAccounts(data.accounts || {});
+            } catch (err) {
+                showToast('Failed to load accounts', 'error');
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function renderAccounts(accounts) {
+            const list = document.getElementById('account-list');
+            list.innerHTML = '';
+            
+            if(Object.keys(accounts).length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No accounts in the pool. Click "Login via ChatGPT" to authorize an account.</p>';
+                return;
+            }
+
+            for (const [aid, acc] of Object.entries(accounts)) {
+                const isCooldown = acc.status === 'cooldown';
+                const statusClass = isCooldown ? 'status-cooldown' : 'status-active';
+                const errReason = acc.last_error_reason || 'None';
+                const errCount = acc.error_count || 0;
+                
+                const card = document.createElement('div');
+                card.className = 'account-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="account-id">${aid}</div>
+                        <div class="status-badge ${statusClass}">${acc.status.toUpperCase()}</div>
+                    </div>
+                    <div class="card-stats">
+                        <div><strong>Errors:</strong> ${errCount}</div>
+                        <div><strong>Last Error:</strong> <span style="color: ${isCooldown ? 'var(--danger)' : 'inherit'}">${errReason}</span></div>
+                    </div>
+                    <div class="card-actions">
+                        <button type="button" class="btn-small btn-refresh" onclick="refreshAccount('${aid}')">Sync Token</button>
+                        <button type="button" class="btn-small btn-danger" onclick="deleteAccount('${aid}')">Remove</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            }
+        }
+
+        function loginWithChatGPT() {
+            showToast('Initializing secure OAuth flow...', 'success');
+            fetch('/api/auth/login').then(r => r.json()).then(data => {
+                const width = 500;
+                const height = 700;
+                const left = (window.screen.width / 2) - (width / 2);
+                const top = (window.screen.height / 2) - (height / 2);
+                window.open(data.url, 'ChatGPT Login', `width=${width},height=${height},top=${top},left=${left}`);
+            }).catch(err => {
+                showToast('Failed to initialize OAuth', 'error');
+            });
+        }
+
+        window.addEventListener('message', (event) => {
+            if (event.data === 'oauth_success') {
+                showToast('Account successfully authorized and added to pool!', 'success');
+                fetchAccounts();
+            }
+        });
+
+        async function deleteAccount(aid) {
+            if(!confirm(`Are you sure you want to remove ${aid}?`)) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/${aid}`, { method: 'DELETE' });
+                if(res.ok) {
+                    showToast('Account removed');
+                    fetchAccounts();
+                } else {
+                    showToast('Failed to remove account', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        async function refreshAccount(aid) {
+            try {
+                showToast(`Refreshing token for ${aid}...`, 'success');
+                const res = await fetch(`${API_BASE}/${aid}/refresh`, { method: 'POST' });
+                if(res.ok) {
+                    showToast('Token refreshed successfully!');
+                    fetchAccounts();
+                } else {
+                    showToast('Refresh failed. Token might be expired.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        // Log Viewer Functions
+        function openLogs() {
+            document.getElementById('modal-backdrop').style.display = 'block';
+            document.getElementById('log-modal').style.display = 'flex';
+            fetchLogs();
+        }
+
+        function closeLogs() {
+            document.getElementById('modal-backdrop').style.display = 'none';
+            document.getElementById('log-modal').style.display = 'none';
+        }
+
+        async function fetchLogs() {
+            const content = document.getElementById('log-content');
+            content.innerText = 'Loading...';
+            try {
+                const res = await fetch(API_LOGS);
+                const data = await res.json();
+                content.innerText = data.logs;
+                content.scrollTop = content.scrollHeight;
+            } catch (err) {
+                content.innerText = 'Failed to load logs.';
+            }
+        }
+
+        // Init
+        fetchAccounts();
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+services:
+  codex-proxy:
+    platform: linux/amd64
+    build: .
+    container_name: codex-openai-proxy
+    restart: always  # 崩溃或重启系统后自动拉起，保障长期后台运行
+    ports:
+      - "8000:8000"
+      - "1455:8000"  # OpenAI Oauth 强制回调白名单端口，自动转发到容器内 8000 端口
+    volumes:
+      - ./data:/app/data  # 挂载数据目录，持久化账号池和会话缓存
+    environment:
+      - TZ=Asia/Shanghai  # 统一时区，保证 Token 刷新和日志时间准确
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"   # 限制单个日志文件大小，防止长期运行撑爆硬盘
+        max-file: "3"     # 仅保留最近3个日志文件
