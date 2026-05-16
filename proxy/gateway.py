@@ -66,12 +66,24 @@ class Orchestrator:
                 if resp.status_code == 200: return resp, aid
                 
                 logger.error(f"UPSTREAM FAILURE: {resp.status_code} - {resp.text}")
+
+                # 账号类错误：标记冷却并重试下一个账号 / Account-level errors: cooldown and retry
                 if resp.status_code in (401, 403, 429):
-                    # 增加 401，让失效的 Token 也能自动触发冷却/切换
                     account_store.report_fault(aid, f"E{resp.status_code}")
                     continue
-                raise HTTPException(status_code=resp.status_code, detail=f"Backend Failure: {resp.status_code}")
+
+                # 请求类错误（如模型不支持）：直接透传给客户端，不影响账号状态
+                # Request-level errors (e.g. unsupported model): pass through to client, do not penalize account
+                try:
+                    detail = resp.json()
+                except Exception:
+                    detail = resp.text or f"Backend Failure: {resp.status_code}"
+                raise HTTPException(status_code=resp.status_code, detail=detail)
+
+            except HTTPException:
+                raise  # 请求类错误直接向上抛出，不触发账号冷却 / Re-raise request errors immediately
             except Exception as e:
+                # 网络/超时等底层异常才标记账号故障 / Only penalize account for network/transport failures
                 logger.error(f"UPSTREAM EXCEPTION: {str(e)}")
                 account_store.report_fault(aid, str(e))
                 continue
