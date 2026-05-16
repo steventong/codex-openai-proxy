@@ -127,7 +127,7 @@ codex-openai-proxy/
 │   ├── __init__.py
 │   ├── gateway.py        # Request orchestration — upstream retry logic
 │   ├── accounts.py       # Account pool — storage, rotation, token refresh
-│   ├── settings.py       # Global configuration loader
+│   ├── config.py         # Global configuration loader
 │   └── engine/
 │       ├── bridge.py     # Stream adapter — translates upstream SSE to OpenAI format
 │       ├── catalog.py    # Model registry — aliases, reasoning bounds, backend IDs

@@ -30,7 +30,7 @@ ch.setFormatter(fmt)
 logging.basicConfig(level=logging.INFO, handlers=[fh, ch])
 
 from proxy.accounts import account_store
-from proxy.settings import KEY_CLIENT_ID, AUTH_ROOT
+from proxy.config import KEY_CLIENT_ID, AUTH_ROOT
 from proxy.engine.catalog import model_hub
 from proxy.engine.protocol import CodecRegistry
 from proxy.engine.history import session_manager

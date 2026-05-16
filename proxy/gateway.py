@@ -11,7 +11,7 @@ import httpx
 from fastapi import HTTPException
 
 from .accounts import account_store
-from .settings import GATEWAY_UPSTREAM, SYSTEM_PROMPT, SPECIAL_PROMPT
+from .config import GATEWAY_UPSTREAM, SYSTEM_PROMPT, SPECIAL_PROMPT
 from .engine.catalog import model_hub
 from .engine.protocol import CodecRegistry
 from .engine.history import session_manager
