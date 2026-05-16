@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import httpx
 from fastapi import HTTPException
 
-from .identity import account_store
+from .accounts import account_store
 from .settings import GATEWAY_UPSTREAM, SYSTEM_PROMPT, SPECIAL_PROMPT
 from .engine.catalog import model_hub
 from .engine.protocol import CodecRegistry

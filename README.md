@@ -126,7 +126,7 @@ codex-openai-proxy/
 ├── proxy/                # Core application package
 │   ├── __init__.py
 │   ├── gateway.py        # Request orchestration — upstream retry logic
-│   ├── identity.py       # Account pool — storage, rotation, token refresh
+│   ├── accounts.py       # Account pool — storage, rotation, token refresh
 │   ├── settings.py       # Global configuration loader
 │   └── engine/
 │       ├── bridge.py     # Stream adapter — translates upstream SSE to OpenAI format
