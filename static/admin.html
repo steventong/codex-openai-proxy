@@ -346,23 +346,12 @@
         </div>
 
         <!-- API Endpoints Info Panel -->
-        <div class="glass-panel" style="grid-column: 1 / -1;">
-            <h2>Supported API Endpoints</h2>
-            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
-                <div style="background: rgba(0,0,0,0.2); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--glass-border);">
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
-                        <span style="background: var(--accent); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">POST</span>
-                        <code style="color: #60a5fa; font-size: 1.15rem; font-family: monospace; user-select: all;">http://127.0.0.1:8088/v1/chat/completions</code>
-                    </div>
-                    <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 0.5rem;">
-                        OpenAI 标准对话补全接口。你的所有第三方客户端、IDE 插件都可以直接将此地址填入 "Base URL / Endpoint" 配置项中（若只让填 Base URL，则填 <code>http://127.0.0.1:8088/v1</code>）。
-                    </p>
-                    <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-left: 1.5rem;">
-                        <li><strong>流式优先</strong>：强烈建议在请求中开启 <code>stream: true</code> 以获得最佳体验。</li>
-                        <li><strong>思考过程</strong>：对带有 Reasoning/Summary 的复杂思维模型，会自动抽取思考过程并组装为客户端兼容的 <code>&lt;think&gt;...&lt;/think&gt;</code> 标签。</li>
-                    </ul>
-                </div>
+        <div class="glass-panel" style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="background: var(--accent); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">POST</span>
+                <code style="color: #60a5fa; font-size: 1.15rem; font-family: monospace; user-select: all;">http://127.0.0.1:8088/v1/chat/completions</code>
             </div>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">OpenAI Compatible Endpoint</span>
         </div>
     </div>
 
