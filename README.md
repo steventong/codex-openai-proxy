@@ -29,13 +29,12 @@ A lightweight, self-hosted FastAPI proxy that exposes a standard OpenAI-compatib
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Register your first account (interactive)
-python cli.py add
-
-# 3. Start the proxy
+# 2. Start the proxy
 python main.py
 # → Listening on http://0.0.0.0:8000
 ```
+
+Then open **http://localhost:8000/admin** in your browser to log in and manage accounts.
 
 ### Option 2 — Docker Compose
 
@@ -120,24 +119,6 @@ Liveness check. Returns active session count.
 
 ---
 
-## 📦 CLI Reference
-
-```bash
-# Add an account manually
-python cli.py add
-
-# List all accounts and their status
-python cli.py ls
-
-# Remove an account
-python cli.py rm <account_id>
-
-# Force-refresh a token
-python cli.py refresh <account_id>
-```
-
----
-
 ## 📁 Project Structure
 
 ```
@@ -155,7 +136,6 @@ codex-openai-proxy/
 ├── static/
 │   └── admin.html        # Web admin dashboard (single-file SPA)
 ├── main.py               # FastAPI application entry point — routes & OAuth flow
-├── cli.py                # CLI management tool
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
