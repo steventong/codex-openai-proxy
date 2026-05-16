@@ -29,13 +29,13 @@ ch = logging.StreamHandler()
 ch.setFormatter(fmt)
 logging.basicConfig(level=logging.INFO, handlers=[fh, ch])
 
-from identity import account_store
-from settings import KEY_CLIENT_ID, AUTH_ROOT
-from engine.catalog import model_hub
-from engine.protocol import CodecRegistry
-from engine.history import session_manager
-from engine.bridge import FlowAdapter
-from gateway import orchestrator
+from proxy.identity import account_store
+from proxy.settings import KEY_CLIENT_ID, AUTH_ROOT
+from proxy.engine.catalog import model_hub
+from proxy.engine.protocol import CodecRegistry
+from proxy.engine.history import session_manager
+from proxy.engine.bridge import FlowAdapter
+from proxy.gateway import orchestrator
 
 logger = logging.getLogger("ProxyApp")
 
@@ -85,7 +85,6 @@ async def chat_completions(request: Request):
                 await resp.aclose()
                 await client.aclose()
     except HTTPException as he:
-        # 直接抛出 FastAPI 异常，避免变成 500
         raise he
     except Exception as e:
         logger.error(f"Chat completion error: {str(e)}\n{traceback.format_exc()}")
@@ -213,7 +212,7 @@ def create_pkce():
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_ui():
     try:
-        with open("admin.html", "r") as f: return f.read()
+        with open("static/admin.html", "r") as f: return f.read()
     except: return "<h1>Portal Unavailable</h1>"
 
 @app.get("/api/auth/login")
@@ -269,7 +268,8 @@ async def oauth_callback(code: str, state: str):
 
 @app.get("/api/accounts")
 async def list_accounts():
-    return {"accounts": account_store.peek_pool()}
+    pool = account_store.peek_pool()
+    return {"accounts": pool, "session_count": account_store.get_session_count()}
 
 @app.post("/api/accounts")
 async def add_account(req: AccountReq):

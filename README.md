@@ -142,17 +142,20 @@ python cli.py refresh <account_id>
 
 ```
 codex-openai-proxy/
-├── main.py           # FastAPI application — routes & OAuth flow
-├── gateway.py        # Request orchestration — upstream retry logic
-├── identity.py       # Account pool — storage, rotation, token refresh
-├── settings.py       # Global configuration loader
-├── cli.py            # CLI management tool
-├── admin.html        # Web admin dashboard (single-file SPA)
-├── engine/
-│   ├── bridge.py     # Stream adapter — translates upstream SSE to OpenAI format
-│   ├── catalog.py    # Model registry — aliases, reasoning bounds, backend IDs
-│   ├── history.py    # Session tracker — context hashing & event tracking
-│   └── protocol.py   # Message codec — converts Chat format ↔ Responses API format
+├── proxy/                # Core application package
+│   ├── __init__.py
+│   ├── gateway.py        # Request orchestration — upstream retry logic
+│   ├── identity.py       # Account pool — storage, rotation, token refresh
+│   ├── settings.py       # Global configuration loader
+│   └── engine/
+│       ├── bridge.py     # Stream adapter — translates upstream SSE to OpenAI format
+│       ├── catalog.py    # Model registry — aliases, reasoning bounds, backend IDs
+│       ├── history.py    # Session tracker — context hashing & event tracking
+│       └── protocol.py   # Message codec — converts Chat format ↔ Responses API format
+├── static/
+│   └── admin.html        # Web admin dashboard (single-file SPA)
+├── main.py               # FastAPI application entry point — routes & OAuth flow
+├── cli.py                # CLI management tool
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt

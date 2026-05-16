@@ -435,8 +435,10 @@
                         <div class="status-badge ${statusClass}">${acc.status.toUpperCase()}</div>
                     </div>
                     <div class="card-stats">
+                        ${errCount > 0 || isCooldown ? `
                         <div><strong>Errors:</strong> ${errCount}</div>
                         <div><strong>Last Error:</strong> <span style="color: ${isCooldown ? 'var(--danger)' : 'inherit'}">${errReason}</span></div>
+                        ` : ''}
                     </div>
                     <div class="card-actions">
                         <button type="button" class="btn-small btn-refresh" onclick="refreshAccount('${aid}')">Sync Token</button>

@@ -4,7 +4,7 @@ Codex OpenAI Proxy 的命令行管理工具。
 """
 import time
 import click
-from identity import account_store
+from proxy.identity import account_store
 
 
 @click.group()
