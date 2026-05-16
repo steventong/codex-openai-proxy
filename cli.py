@@ -1,61 +1,71 @@
+"""
+CLI Management Tool for Codex OpenAI Proxy.
+Codex OpenAI Proxy 的命令行管理工具。
+"""
+import time
 import click
-import json
-from account_manager import account_manager
+from identity import account_store
+
 
 @click.group()
 def cli():
-    """Codex OpenAI Proxy 多账号管理面板"""
+    """Codex OpenAI Proxy - Multi-account management panel."""
     pass
 
+
 @cli.command()
-@click.option('--account-id', prompt='Account ID (e.g., user1@email.com)', help='唯一账号标识')
-@click.option('--access-token', prompt='Access Token', help='OpenAI 访问令牌')
-@click.option('--refresh-token', prompt='Refresh Token', help='OpenAI 刷新令牌', default='')
-@click.option('--id-token', prompt='ID Token (可选)', default='', help='ID 令牌')
+@click.option("--account-id", prompt="Account ID (e.g., user@example.com)", help="Unique account identifier.")
+@click.option("--access-token", prompt="Access Token", help="OpenAI access token.")
+@click.option("--refresh-token", prompt="Refresh Token", default="", help="OpenAI refresh token.")
+@click.option("--id-token", prompt="ID Token (optional)", default="", help="OpenAI ID token.")
 def add(account_id, access_token, refresh_token, id_token):
-    """手动添加或更新一个账号到账号池"""
-    tokens = {
+    """Manually add or update an account in the pool."""
+    account_store.register_account(account_id, {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "id_token": id_token
-    }
-    account_manager.add_account(account_id, tokens)
-    click.secho(f"✅ 账号 '{account_id}' 已成功添加并加入调度池！", fg='green')
+        "id_token": id_token,
+        "last_refresh": time.time(),
+    })
+    click.secho(f"✅ Account '{account_id}' added successfully.", fg="green")
+
 
 @cli.command()
 def ls():
-    """列出当前账号池状态"""
-    accounts = account_manager.get_all_accounts()
+    """List all accounts and their current status."""
+    accounts = account_store.peek_pool()
     if not accounts:
-        click.secho("⚠️ 当前账号池为空，请使用 add 命令添加账号。", fg='yellow')
+        click.secho("⚠️  Account pool is empty. Use `add` to register an account.", fg="yellow")
         return
 
-    click.secho(f"{'Account ID':<30} | {'Status':<10} | {'Errors':<6} | {'Last Error'}", fg='cyan')
-    click.secho("-" * 75)
+    click.secho(f"{'Account ID':<35} | {'Status':<10} | {'Errors':<6} | Last Error", fg="cyan")
+    click.secho("-" * 80)
     for aid, acc in accounts.items():
         status = acc.get("status", "unknown")
-        color = 'green' if status == 'active' else 'red'
+        color = "green" if status == "active" else "red"
         err_count = acc.get("error_count", 0)
         err_reason = acc.get("last_error_reason", "-")
-        click.secho(f"{aid:<30} | {status:<10} | {err_count:<6} | {err_reason}", fg=color)
+        click.secho(f"{aid:<35} | {status:<10} | {err_count:<6} | {err_reason}", fg=color)
+
 
 @cli.command()
-@click.argument('account_id')
+@click.argument("account_id")
 def rm(account_id):
-    """从账号池中删除指定账号"""
-    account_manager.remove_account(account_id)
-    click.secho(f"🗑️ 账号 '{account_id}' 已移除。", fg='green')
+    """Remove an account from the pool."""
+    account_store.unregister_account(account_id)
+    click.secho(f"🗑️  Account '{account_id}' removed.", fg="green")
+
 
 @cli.command()
-@click.argument('account_id')
+@click.argument("account_id")
 def refresh(account_id):
-    """强制对指定账号进行 Token 刷新"""
-    click.secho(f"正在尝试刷新账号 '{account_id}' 的 Token...", fg='cyan')
-    success = account_manager.force_refresh_token(account_id)
+    """Force a token refresh for a specific account."""
+    click.secho(f"Refreshing token for '{account_id}'...", fg="cyan")
+    success = account_store.refresh_session(account_id)
     if success:
-        click.secho("✅ 刷新成功！", fg='green')
+        click.secho("✅ Refresh successful.", fg="green")
     else:
-        click.secho("❌ 刷新失败，请检查 refresh_token 或网络连接。", fg='red')
+        click.secho("❌ Refresh failed. Check the refresh_token or network connection.", fg="red")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     cli()

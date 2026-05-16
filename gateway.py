@@ -78,6 +78,11 @@ class Orchestrator:
         raise HTTPException(status_code=429, detail="Critical Failure")
 
     @classmethod
+    def transform_request(cls, body: Dict[str, Any], sid_header: str) -> Dict[str, Any]:
+        """
+        Transform an OpenAI Chat Completions request body into the upstream Responses API format.
+        将 OpenAI Chat Completions 请求体转换为上游 Responses API 格式。
+        """
         req_m = body.get("model")
         target_model = model_hub.map_target(req_m)
         inputs = CodecRegistry.ingest_messages(body.get("messages", []))
