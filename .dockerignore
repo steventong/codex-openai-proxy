@@ -1,0 +1,22 @@
+# 忽略私密数据
+data/
+.env
+*.json
+!requirements.txt
+!package.json
+
+# 忽略 Git 和系统冗余
+.git/
+.gitignore
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 忽略开发文档
+.vscode/
+.idea/
+*.md
+LICENSE
+.env.example
