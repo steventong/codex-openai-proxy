@@ -39,6 +39,16 @@ from proxy.gateway import orchestrator
 
 logger = logging.getLogger("ProxyApp")
 
+def normalize_error(status_code: int, content: bytes) -> Dict[str, Any]:
+    """Normalize upstream error to OpenAI format."""
+    try:
+        data = json.loads(content)
+        if isinstance(data, dict) and "error" in data: return data
+        msg = data.get("detail") if isinstance(data, dict) else str(data)
+    except:
+        msg = content.decode(errors="ignore") or f"Backend error {status_code}"
+    return {"error": {"message": msg or f"Error {status_code}", "type": "invalid_request_error", "param": None, "code": status_code}}
+
 # 对于官方 Client ID，必须使用此固定回调地址
 FIXED_REDIRECT_URI = "http://localhost:1455/auth/callback"
 
@@ -68,8 +78,7 @@ async def chat_completions(request: Request):
             content = await resp.aread()
             await resp.aclose()
             await client.aclose()
-            return Response(content=content, status_code=resp.status_code,
-                            media_type=resp.headers.get("content-type", "application/json"))
+            return JSONResponse(content=normalize_error(resp.status_code, content), status_code=resp.status_code)
 
         ts = int(time.time())
         meta = {
@@ -119,8 +128,7 @@ async def text_completions(request: Request):
             content = await resp.aread()
             await resp.aclose()
             await client.aclose()
-            return Response(content=content, status_code=resp.status_code,
-                            media_type=resp.headers.get("content-type", "application/json"))
+            return JSONResponse(content=normalize_error(resp.status_code, content), status_code=resp.status_code)
 
         ts = int(time.time())
         if bool(body.get("stream", False)):
@@ -177,8 +185,7 @@ async def direct_responses(request: Request):
             content = await resp.aread()
             await resp.aclose()
             await client.aclose()
-            return Response(content=content, status_code=resp.status_code,
-                            media_type=resp.headers.get("content-type", "application/json"))
+            return JSONResponse(content=normalize_error(resp.status_code, content), status_code=resp.status_code)
 
         if bool(body.get("stream", False)):
             async def stream_raw():
