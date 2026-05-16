@@ -72,16 +72,12 @@ class Orchestrator:
                     account_store.report_fault(aid, f"E{resp.status_code}")
                     continue
 
-                # 请求类错误（如模型不支持）：直接透传给客户端，不影响账号状态
-                # Request-level errors (e.g. unsupported model): pass through to client, do not penalize account
-                try:
-                    detail = resp.json()
-                except Exception:
-                    detail = resp.text or f"Backend Failure: {resp.status_code}"
-                raise HTTPException(status_code=resp.status_code, detail=detail)
+                # 请求类错误：原样返回，由调用方透传给客户端
+                # Request-level errors: return as-is, caller passes through to client
+                return resp, aid
 
             except HTTPException:
-                raise  # 请求类错误直接向上抛出，不触发账号冷却 / Re-raise request errors immediately
+                raise
             except Exception as e:
                 # 网络/超时等底层异常才标记账号故障 / Only penalize account for network/transport failures
                 logger.error(f"UPSTREAM EXCEPTION: {str(e)}")

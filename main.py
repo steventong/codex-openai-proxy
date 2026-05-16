@@ -13,7 +13,7 @@ import traceback
 from logging.handlers import TimedRotatingFileHandler
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import pydantic
@@ -61,7 +61,16 @@ async def chat_completions(request: Request):
         ctx = orchestrator.transform_request(body, sid_header)
         client = httpx.AsyncClient()
         resp, _ = await orchestrator.execute_upstream(ctx["data"], ctx["sid"], client)
-        
+
+        # 透传上游非 200 错误，保留原始响应体和状态码
+        # Pass through non-200 upstream errors with original status and body
+        if resp.status_code != 200:
+            content = await resp.aread()
+            await resp.aclose()
+            await client.aclose()
+            return Response(content=content, status_code=resp.status_code,
+                            media_type=resp.headers.get("content-type", "application/json"))
+
         ts = int(time.time())
         meta = {
             "model": ctx["model_id"], "created": ts, 
@@ -106,6 +115,13 @@ async def text_completions(request: Request):
         client = httpx.AsyncClient()
         resp, _ = await orchestrator.execute_upstream(ctx["data"], ctx["sid"], client)
         
+        if resp.status_code != 200:
+            content = await resp.aread()
+            await resp.aclose()
+            await client.aclose()
+            return Response(content=content, status_code=resp.status_code,
+                            media_type=resp.headers.get("content-type", "application/json"))
+
         ts = int(time.time())
         if bool(body.get("stream", False)):
             async def stream_output():
@@ -156,7 +172,14 @@ async def direct_responses(request: Request):
         
         client = httpx.AsyncClient()
         resp, _ = await orchestrator.execute_upstream(normalized, sid, client)
-        
+
+        if resp.status_code != 200:
+            content = await resp.aread()
+            await resp.aclose()
+            await client.aclose()
+            return Response(content=content, status_code=resp.status_code,
+                            media_type=resp.headers.get("content-type", "application/json"))
+
         if bool(body.get("stream", False)):
             async def stream_raw():
                 try:

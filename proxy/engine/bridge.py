@@ -7,6 +7,8 @@ import json
 import time
 from typing import AsyncGenerator, Dict, Any, Optional, Tuple
 
+import httpx
+
 
 class FlowAdapter:
     @staticmethod
