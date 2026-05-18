@@ -201,6 +201,30 @@ async def admin_ui():
         with open("static/admin.html", "r") as f: return f.read()
     except: return "<h1>Portal Unavailable</h1>"
 
+@app.get("/admin.css")
+async def serve_css():
+    """
+    提供管理后台专用的 CSS 样式表。
+    Serve administrative portal CSS stylesheets.
+    """
+    try:
+        with open("static/admin.css", "r") as f:
+            return Response(content=f.read(), media_type="text/css")
+    except:
+        raise HTTPException(status_code=404, detail="CSS file not found")
+
+@app.get("/admin.js")
+async def serve_js():
+    """
+    提供管理后台专用的 JS 交互逻辑。
+    Serve administrative portal Javascript interactive logics.
+    """
+    try:
+        with open("static/admin.js", "r") as f:
+            return Response(content=f.read(), media_type="application/javascript")
+    except:
+        raise HTTPException(status_code=404, detail="JS file not found")
+
 @app.get("/api/auth/login")
 async def oauth_login():
     cv, ch = create_pkce()
@@ -240,6 +264,7 @@ async def oauth_callback(code: str, state: str):
             
             account_store.register_account(aid, {
                 "access_token": p.get("access_token"), "refresh_token": p.get("refresh_token"),
+                "expires_in": p.get("expires_in"),
                 "id_token": id_token, "last_refresh": time.time()
             })
             
