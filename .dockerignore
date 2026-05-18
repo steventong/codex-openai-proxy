@@ -17,6 +17,6 @@ __pycache__/
 # 忽略开发文档
 .vscode/
 .idea/
-*.md
+LOCAL_DOCKER_PUBLISH.md
 LICENSE
 .env.example

@@ -2,6 +2,7 @@
 Main Entry Service - Gateway and Administrative Portal.
 """
 import os
+import sys
 import time
 import json
 import logging
@@ -25,7 +26,7 @@ for h in logging.root.handlers[:]: logging.root.removeHandler(h)
 fmt = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 fh = TimedRotatingFileHandler(os.path.join(LOG_ROOT, "gateway.log"), when="midnight", backupCount=30)
 fh.setFormatter(fmt)
-ch = logging.StreamHandler()
+ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(fmt)
 logging.basicConfig(level=logging.INFO, handlers=[fh, ch])
 

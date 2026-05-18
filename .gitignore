@@ -41,3 +41,6 @@ data/
 .DS_Store?
 ._*
 Thumbs.db
+
+# Local release helpers
+LOCAL_DOCKER_PUBLISH.md
