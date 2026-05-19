@@ -36,54 +36,36 @@ class Orchestrator:
 
     @classmethod
     async def execute_upstream(cls, data: Dict[str, Any], sid: str, client: httpx.AsyncClient) -> Tuple[httpx.Response, str]:
-        for attempt in range(3):
-            identity = account_store.lease_account(sid)
-            if not identity:
-                count = len(account_store.peek_pool())
-                detail = "Account pool is empty. Please login first." if count == 0 else "All accounts are in cooldown/error."
-                raise HTTPException(status_code=429, detail=detail)
-            
-            aid, token = identity
-            
-            # 构建上游请求头 / Build upstream headers
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-                "Accept": "text/event-stream",
-                "chatgpt-account-id": aid,
-                "OpenAI-Beta": "responses=experimental",
-                "session_id": sid
-            }
-            
-            safe_headers = {k: (v[:10] + "..." if k == "Authorization" else v) for k, v in headers.items()}
-            log_payload = {"url": GATEWAY_UPSTREAM, "headers": safe_headers, "body": data}
-            logger.info(f"UPSTREAM REQUEST [Account: {aid}]:\n{json.dumps(log_payload, indent=2, ensure_ascii=False)}")
+        identity = account_store.lease_account(sid)
+        if not identity:
+            raise HTTPException(status_code=429, detail="Account pool is empty. Please login first.")
 
-            try:
-                resp = await client.post(GATEWAY_UPSTREAM, headers=headers, json=data, timeout=None)
-                logger.info(f"UPSTREAM RESPONSE STATUS: {resp.status_code}")
-                
-                if resp.status_code == 200: return resp, aid
-                
+        aid, token = identity
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+            "chatgpt-account-id": aid,
+            "OpenAI-Beta": "responses=experimental",
+            "session_id": sid
+        }
+
+        safe_headers = {k: (v[:10] + "..." if k == "Authorization" else v) for k, v in headers.items()}
+        log_payload = {"url": GATEWAY_UPSTREAM, "headers": safe_headers, "body": data}
+        logger.info(f"UPSTREAM REQUEST [Account: {aid}]:\n{json.dumps(log_payload, indent=2, ensure_ascii=False)}")
+
+        try:
+            resp = await client.post(GATEWAY_UPSTREAM, headers=headers, json=data, timeout=None)
+            logger.info(f"UPSTREAM RESPONSE STATUS: {resp.status_code}")
+            if resp.status_code != 200:
                 logger.error(f"UPSTREAM FAILURE: {resp.status_code} - {resp.text}")
-
-                # 账号类错误：标记冷却并重试下一个账号 / Account-level errors: cooldown and retry
-                if resp.status_code in (401, 403, 429):
-                    account_store.report_fault(aid, f"E{resp.status_code}")
-                    continue
-
-                # 请求类错误：原样返回，由调用方透传给客户端
-                # Request-level errors: return as-is, caller passes through to client
-                return resp, aid
-
-            except HTTPException:
-                raise
-            except Exception as e:
-                # 网络/超时等底层异常才标记账号故障 / Only penalize account for network/transport failures
-                logger.error(f"UPSTREAM EXCEPTION: {str(e)}")
-                account_store.report_fault(aid, str(e))
-                continue
-        raise HTTPException(status_code=429, detail="Critical Failure")
+            return resp, aid
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"UPSTREAM EXCEPTION: {str(e)}")
+            raise HTTPException(status_code=502, detail=str(e))
 
     @classmethod
     def transform_request(cls, body: Dict[str, Any], sid_header: str) -> Dict[str, Any]:

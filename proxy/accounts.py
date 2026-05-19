@@ -75,9 +75,7 @@ class AccountPool:
                     now_time = time.time()
                     # 鲁棒性补全 / Robustness autocompletion
                     for aid, acc in data.items():
-                        if "status" not in acc: acc["status"] = "active"
-                        if "error_count" not in acc: acc["error_count"] = 0
-                        if "last_error_time" not in acc: acc["last_error_time"] = 0
+                        acc["status"] = "active"
                         if "last_refresh" not in acc: acc["last_refresh"] = now_time
                         if "next_refresh_at" not in acc:
                             acc["next_refresh_at"] = _compute_next_refresh_at(
@@ -109,8 +107,6 @@ class AccountPool:
         # 补充初始状态 / Set initial fields
         now_time = time.time()
         tokens["status"] = "active"
-        tokens["error_count"] = 0
-        tokens["last_error_time"] = 0
         tokens["last_refresh"] = now_time
         tokens["next_refresh_at"] = _compute_next_refresh_at(now_time, tokens.get("expires_in"))
         tokens["refresh_history"] = [{
@@ -138,60 +134,35 @@ class AccountPool:
         with self.lock:
             return len(self.sessions)
 
-    def report_fault(self, account_id: str, error_type: str):
-        """当遇到限流、配额不足时标记账号状态并进入冷却"""
-        with self.lock:
-            if account_id in self.accounts:
-                acc = self.accounts[account_id]
-                acc["status"] = "cooldown"
-                acc["error_count"] = acc.get("error_count", 0) + 1
-                acc["last_error_time"] = time.time()
-                acc["last_error_reason"] = error_type
-        self.flush_accounts_to_disk()
-        logger.warning(f"Account {account_id} marked as cooldown due to {error_type}.")
-
     def lease_account(self, session_id: Optional[str] = None) -> Optional[Tuple[str, str]]:
         """
         获取一个可用的账号，优先根据 session_id 命中缓存。
         返回 (account_id, access_token)
         """
         now = time.time()
-        
-        # 1. 恢复已经过了冷却期（例如15分钟）的账号
-        with self.lock:
-            for aid, acc in self.accounts.items():
-                if acc.get("status") == "cooldown":
-                    if now - acc.get("last_error_time", 0) > 900: # 15分钟冷却
-                        acc["status"] = "active"
-                        acc["error_count"] = 0
-                        logger.info(f"Account {aid} recovered from cooldown.")
-            
-        # 2. 检查会话缓存
+
+        # 1. 检查会话缓存
         if session_id:
             with self.lock:
                 cached_data = self.sessions.get(session_id)
                 if cached_data:
                     cached_acc_id = cached_data.get("account_id")
                     acc = self.accounts.get(cached_acc_id)
-                    if acc and acc.get("status") == "active":
+                    if acc:
                         return cached_acc_id, acc.get("access_token")
 
-        # 3. 缓存未命中或缓存账号不可用，轮询分配一个新的 active 账号
+        # 2. 缓存未命中或缓存账号不可用，选择一个可用账号
         with self.lock:
-            active_accounts = [aid for aid, acc in self.accounts.items() if acc.get("status") == "active"]
-            cooldown_accounts = [aid for aid, acc in self.accounts.items() if acc.get("status") == "cooldown"]
-            
-            if not active_accounts:
-                logger.warning(f"No active accounts available. (Total: {len(self.accounts)}, Cooldown: {len(cooldown_accounts)})")
+            account_ids = list(self.accounts.keys())
+
+            if not account_ids:
+                logger.warning("No accounts available in pool.")
                 return None
-            
-            # 简单的排序分配（可以基于上次使用时间做 Round-Robin，这里随机或取第一个）
-            # 为了简单，按 error_count 升序，或者直接取第一个
-            active_accounts.sort(key=lambda a: self.accounts[a].get("error_count", 0))
-            chosen_id = active_accounts[0]
+
+            chosen_id = account_ids[0]
             chosen_token = self.accounts[chosen_id].get("access_token")
 
-        # 4. 更新会话映射
+        # 3. 更新会话映射
         if session_id:
             with self.lock:
                 self.sessions[session_id] = {
@@ -255,9 +226,6 @@ class AccountPool:
                             data.get("expires_in", acc.get("expires_in"))
                         )
                         self.accounts[account_id]["status"] = "active"
-                        self.accounts[account_id]["error_count"] = 0
-                        self.accounts[account_id]["last_error_time"] = 0
-                        self.accounts[account_id]["last_error_reason"] = ""
                         
                         history = self.accounts[account_id].setdefault("refresh_history", [])
                         history.append({
@@ -309,8 +277,6 @@ class AccountPool:
                 needs_refresh = []
                 with self.lock:
                     for aid, acc in self.accounts.items():
-                        if acc.get("status") == "cooldown":
-                            continue
                         next_refresh_at = acc.get("next_refresh_at")
                         if next_refresh_at is None:
                             next_refresh_at = _compute_next_refresh_at(

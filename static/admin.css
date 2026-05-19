@@ -403,7 +403,7 @@ header {
     background: linear-gradient(90deg, transparent, var(--accent-success), transparent);
 }
 
-.account-card.card-cooldown::before {
+.account-card.card-error::before {
     background: linear-gradient(90deg, transparent, var(--accent-danger), transparent);
 }
 
@@ -419,7 +419,7 @@ header {
     box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.08);
 }
 
-.account-card.card-cooldown:hover {
+.account-card.card-error:hover {
     border-color: rgba(244, 63, 94, 0.2);
     box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.08);
 }
@@ -478,7 +478,7 @@ header {
     animation: pulse-green 2s infinite;
 }
 
-.pulse-cooldown {
+.pulse-error {
     background-color: var(--accent-danger);
     box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
     animation: pulse-red 2s infinite;
@@ -503,7 +503,7 @@ header {
     letter-spacing: 0.05em;
 }
 .text-active { color: var(--accent-success); }
-.text-cooldown { color: var(--accent-danger); }
+.text-error { color: var(--accent-danger); }
 
 /* Meta details */
 .acc-details {

@@ -99,32 +99,28 @@ function updateTimers() {
         if (etaSpan && (acc.next_refresh_at || acc.last_refresh)) {
             const etaTime = acc.next_refresh_at || (acc.last_refresh + 2700);
             const remaining = etaTime - now;
-            
-            if (acc.status === 'cooldown') {
-                // For cooldown accounts, auto refresh daemon won't refresh it, but it shows recovery ETA instead.
-                const recoveryRemaining = 900 - (now - (acc.last_error_time || 0));
-                if (recoveryRemaining > 0) {
-                    const m = Math.floor(recoveryRemaining / 60);
-                    const s = Math.floor(recoveryRemaining % 60);
-                    etaSpan.innerText = `Recover in ${m}m ${s}s`;
-                    etaSpan.style.color = 'var(--accent-danger)';
-                } else {
-                    etaSpan.innerText = 'Pending Recovery';
-                    etaSpan.style.color = 'var(--accent-warning)';
-                }
+
+            if (remaining > 0) {
+                const m = Math.floor(remaining / 60);
+                const s = Math.floor(remaining % 60);
+                etaSpan.innerText = `in ${m}m ${s}s`;
+                etaSpan.style.color = 'var(--text-main)';
             } else {
-                if (remaining > 0) {
-                    const m = Math.floor(remaining / 60);
-                    const s = Math.floor(remaining % 60);
-                    etaSpan.innerText = `in ${m}m ${s}s`;
-                    etaSpan.style.color = 'var(--text-main)';
-                } else {
-                    etaSpan.innerText = 'Due now';
-                    etaSpan.style.color = 'var(--accent-warning)';
-                }
+                etaSpan.innerText = 'Due now';
+                etaSpan.style.color = 'var(--accent-warning)';
             }
         }
     }
+}
+
+function getAccountStatus(acc) {
+    if (acc.refresh_history && acc.refresh_history.length > 0) {
+        const latest = [...acc.refresh_history].sort((a, b) => b.time - a.time)[0];
+        if (latest && latest.status === 'failed') {
+            return { label: 'error', cardClass: 'card-error', statusClass: 'pulse-error', textClass: 'text-error' };
+        }
+    }
+    return { label: 'active', cardClass: 'card-active', statusClass: 'pulse-active', textClass: 'text-active' };
 }
 
 async function fetchAccounts() {
@@ -176,13 +172,7 @@ function renderAccounts(accounts) {
     const now = Date.now() / 1000;
 
     for (const [aid, acc] of Object.entries(accounts)) {
-        const isCooldown = acc.status === 'cooldown';
-        const statusClass = isCooldown ? 'pulse-cooldown' : 'pulse-active';
-        const statusTextClass = isCooldown ? 'text-cooldown' : 'text-active';
-        const cardClass = isCooldown ? 'card-cooldown' : 'card-active';
-        
-        const errReason = acc.last_error_reason || 'None';
-        const errCount = acc.error_count || 0;
+        const statusMeta = getAccountStatus(acc);
         
         // Safe element ID to avoid broken characters
         const aidSafe = aid.replace(/[^a-zA-Z0-9]/g, '_');
@@ -222,7 +212,7 @@ function renderAccounts(accounts) {
         }
 
         const card = document.createElement('div');
-        card.className = `account-card ${cardClass}`;
+        card.className = `account-card ${statusMeta.cardClass}`;
         card.innerHTML = `
             <div class="acc-header">
                 <div class="acc-info" title="${aid}">
@@ -235,8 +225,8 @@ function renderAccounts(accounts) {
                     <span class="acc-id">${aid}</span>
                 </div>
                 <div class="status-badge-container">
-                    <span class="pulse-dot ${statusClass}"></span>
-                    <span class="status-text ${statusTextClass}">${acc.status}</span>
+                    <span class="pulse-dot ${statusMeta.statusClass}"></span>
+                    <span class="status-text ${statusMeta.textClass}">${statusMeta.label}</span>
                 </div>
             </div>
             
@@ -255,12 +245,6 @@ function renderAccounts(accounts) {
                     </span>
                     <span class="detail-value" id="eta-${aidSafe}" style="font-weight: 600;">Calculating...</span>
                 </div>
-                ${errCount > 0 || isCooldown ? `
-                <div class="detail-row" style="border-top: 1px dashed rgba(255,255,255,0.04); padding-top: 0.4rem; margin-top: 0.2rem;">
-                    <span class="detail-label" style="color: var(--accent-danger);">Errors (${errCount})</span>
-                    <span class="detail-value error-msg" title="${errReason}">${errReason}</span>
-                </div>
-                ` : ''}
             </div>
 
             <!-- Collapsible History Timeline -->
