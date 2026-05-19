@@ -5,7 +5,7 @@ import threading
 import logging
 from typing import Dict, Optional, List, Tuple
 import requests
-from .config import KEY_CLIENT_ID
+from .config import KEY_CLIENT_ID, AUTH_ROOT
 
 logger = logging.getLogger("IdentityVault")
 
@@ -13,7 +13,7 @@ DATA_DIR = os.getenv("PROXY_DATA_DIR", "./data")
 ACCOUNTS_FILE = os.path.join(DATA_DIR, "accounts.json")
 SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
 
-OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
+OAUTH_TOKEN_URL = f"{AUTH_ROOT}/oauth/token"
 DEFAULT_REFRESH_INTERVAL = 2700
 
 
@@ -257,6 +257,7 @@ class AccountPool:
                         self.accounts[account_id]["status"] = "active"
                         self.accounts[account_id]["error_count"] = 0
                         self.accounts[account_id]["last_error_time"] = 0
+                        self.accounts[account_id]["last_error_reason"] = ""
                         
                         history = self.accounts[account_id].setdefault("refresh_history", [])
                         history.append({
@@ -308,6 +309,8 @@ class AccountPool:
                 needs_refresh = []
                 with self.lock:
                     for aid, acc in self.accounts.items():
+                        if acc.get("status") == "cooldown":
+                            continue
                         next_refresh_at = acc.get("next_refresh_at")
                         if next_refresh_at is None:
                             next_refresh_at = _compute_next_refresh_at(

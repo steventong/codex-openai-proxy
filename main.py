@@ -114,7 +114,7 @@ async def chat_completions(request: Request):
 async def direct_responses(request: Request):
     try:
         body = await request.json()
-        sid_header = request.headers.get("x-session-id", "")
+        sid_header = request.headers.get("x-session-id", "") or request.headers.get("session_id", "")
         
         model_id = body.get("model")
         backend_model = model_hub.map_target(model_id)
