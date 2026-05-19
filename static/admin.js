@@ -10,6 +10,31 @@ let localLogs = ""; // Keep a local cache of logs
 let autoRefreshInterval = null;
 let accountsData = {}; // Cache of current accounts to support live timer update
 
+function switchTab(tabName) {
+    const tabs = {
+        home: {
+            button: document.getElementById('tab-home'),
+            panel: document.getElementById('panel-home')
+        },
+        api: {
+            button: document.getElementById('tab-api'),
+            panel: document.getElementById('panel-api')
+        },
+        logs: {
+            button: document.getElementById('tab-logs'),
+            panel: document.getElementById('panel-logs')
+        }
+    };
+
+    Object.entries(tabs).forEach(([name, elements]) => {
+        const isActive = name === tabName;
+        elements.button.classList.toggle('active', isActive);
+        elements.button.setAttribute('aria-selected', String(isActive));
+        elements.panel.classList.toggle('active', isActive);
+        elements.panel.hidden = !isActive;
+    });
+}
+
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -107,7 +132,6 @@ async function fetchAccounts() {
     try {
         const res = await fetch(API_BASE);
         const data = await res.json();
-        document.getElementById('session-counter').innerText = data.session_count || 0;
         
         accountsData = data.accounts || {};
         renderAccounts(accountsData);
@@ -143,7 +167,7 @@ function renderAccounts(accounts) {
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <p style="font-weight: 500; font-size: 1rem; color: var(--text-light); margin-bottom: 0.5rem;">No Accounts Registered</p>
-                <p style="font-size: 0.85rem;">Click "Connect Account" at the top to complete Auth0 authorization.</p>
+                <p style="font-size: 0.85rem;">Click "Add Account" to complete Auth0 authorization.</p>
             </div>
         `;
         return;

@@ -22,124 +22,132 @@
             <h1>Codex Proxy Console</h1>
             <span>v1.2.0</span>
         </div>
-        <div class="header-actions">
-            <div class="stat-badge" id="session-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Active Sessions: <strong id="session-counter">0</strong>
-            </div>
-            
-            <button class="btn btn-success" onclick="loginWithChatGPT()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                Connect Account
-            </button>
-        </div>
     </header>
 
     <div class="container">
-        <!-- Account Pool Status Panel -->
-        <div class="glass-panel" style="position: relative; min-height: 200px;">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                        <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
-                    </svg>
-                    Account Pool Status
-                </h2>
-                <button class="btn btn-secondary btn-sm" onclick="fetchAccounts()" title="Force pool synchronization">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                    </svg>
-                    Sync Pool
-                </button>
-            </div>
-            <div class="global-loader" id="pool-loader"></div>
-            <div class="account-grid" id="account-list">
-                <!-- Dynamically Populated -->
-            </div>
+        <div class="tab-bar" role="tablist" aria-label="Console Sections">
+            <button class="tab-button active" id="tab-home" type="button" role="tab" aria-selected="true" aria-controls="panel-home" onclick="switchTab('home')">
+                Home
+            </button>
+            <button class="tab-button" id="tab-api" type="button" role="tab" aria-selected="false" aria-controls="panel-api" onclick="switchTab('api')">
+                API
+            </button>
+            <button class="tab-button" id="tab-logs" type="button" role="tab" aria-selected="false" aria-controls="panel-logs" onclick="switchTab('logs')">
+                Logs
+            </button>
         </div>
 
-        <!-- Live Terminal logs Section -->
-        <div class="terminal-panel">
-            <div class="terminal-header">
-                <div class="terminal-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-primary);">
-                        <polyline points="4 17 10 11 4 5"></polyline>
-                        <line x1="12" y1="19" x2="20" y2="19"></line>
-                    </svg>
-                    gateway@codex-proxy:~/logs$
-                </div>
-                <div class="terminal-controls">
-                    <!-- Global Search inside logs -->
-                    <input type="text" id="log-search" class="terminal-input" placeholder="Search logs..." oninput="renderLogs()">
-
-                    <!-- Line selection -->
-                    <div class="terminal-control-group">
-                        <span>Lines:</span>
-                        <select id="log-lines" class="terminal-select" onchange="fetchLogs()">
-                            <option value="50">50</option>
-                            <option value="150" selected>150</option>
-                            <option value="500">500</option>
-                        </select>
-                    </div>
-
-                    <!-- Auto Refresh (3s) -->
-                    <div class="terminal-control-group">
-                        <span>Auto Refresh:</span>
-                        <label class="switch">
-                            <input type="checkbox" id="log-auto-refresh" checked onchange="toggleAutoRefresh(this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- Auto Scroll -->
-                    <div class="terminal-control-group">
-                        <span>Auto Scroll:</span>
-                        <label class="switch">
-                            <input type="checkbox" id="log-auto-scroll" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- Manual fetch and clear -->
-                    <button class="btn btn-secondary btn-sm" onclick="fetchLogs()" title="Reload Logs">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+        <section class="tab-panel active" id="panel-home" role="tabpanel" aria-labelledby="tab-home">
+            <!-- Account Pool Status Panel -->
+            <div class="glass-panel" style="position: relative; min-height: 200px;">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
                         </svg>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="clearLogs()" title="Clear Console View">
-                        Clear
-                    </button>
+                        Account Pool Status
+                    </h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-success btn-sm" onclick="loginWithChatGPT()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            Add Account
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="fetchAccounts()" title="Reload account list">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="global-loader" id="pool-loader"></div>
+                <div class="account-grid" id="account-list">
+                    <!-- Dynamically Populated -->
                 </div>
             </div>
-            <div class="terminal-body" id="log-content">Loading live log stream...</div>
-        </div>
 
-        <!-- API Endpoints Strip -->
-        <div class="endpoints-strip" style="margin-top: 0.5rem;">
-            <div class="endpoint-item">
-                <span class="endpoint-method method-post">POST</span>
-                <code class="endpoint-path">/v1/chat/completions</code>
-                <span class="endpoint-desc">Chat API</span>
+        </section>
+
+        <section class="tab-panel" id="panel-api" role="tabpanel" aria-labelledby="tab-api" hidden>
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h2 class="panel-title">API Endpoints</h2>
+                        <code class="panel-meta">http://127.0.0.1:8088/v1</code>
+                    </div>
+                </div>
+                <div class="endpoints-strip">
+                    <div class="endpoint-item">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/v1/chat/completions</code>
+                        <span class="endpoint-desc">Chat API</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/v1/models</code>
+                        <span class="endpoint-desc">Model List</span>
+                    </div>
+                </div>
             </div>
-            <div class="endpoint-item">
-                <span class="endpoint-method method-get">GET</span>
-                <code class="endpoint-path">/v1/models</code>
-                <span class="endpoint-desc">Model List</span>
+        </section>
+
+        <section class="tab-panel" id="panel-logs" role="tabpanel" aria-labelledby="tab-logs" hidden>
+            <!-- Live Terminal logs Section -->
+            <div class="terminal-panel">
+                <div class="terminal-header">
+                    <div class="terminal-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-primary);">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        gateway@codex-proxy:~/logs$
+                    </div>
+                    <div class="terminal-controls">
+                        <input type="text" id="log-search" class="terminal-input" placeholder="Search logs..." oninput="renderLogs()">
+
+                        <div class="terminal-control-group">
+                            <span>Lines:</span>
+                            <select id="log-lines" class="terminal-select" onchange="fetchLogs()">
+                                <option value="50">50</option>
+                                <option value="150" selected>150</option>
+                                <option value="500">500</option>
+                            </select>
+                        </div>
+
+                        <div class="terminal-control-group">
+                            <span>Auto Refresh:</span>
+                            <label class="switch">
+                                <input type="checkbox" id="log-auto-refresh" checked onchange="toggleAutoRefresh(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="terminal-control-group">
+                            <span>Auto Scroll:</span>
+                            <label class="switch">
+                                <input type="checkbox" id="log-auto-scroll" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <button class="btn btn-secondary btn-sm" onclick="fetchLogs()" title="Reload Logs">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                            </svg>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="clearLogs()" title="Clear Console View">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="log-content">Loading live log stream...</div>
             </div>
-            <div class="endpoint-item" style="opacity: 0.7;">
-                <code class="endpoint-desc" style="font-size: 0.8rem;">Endpoint Base: http://127.0.0.1:8088/v1</code>
-            </div>
-        </div>
+        </section>
     </div>
 
     <!-- Toast Notifications Area -->

@@ -5,6 +5,7 @@ import threading
 import logging
 from typing import Dict, Optional, List, Tuple
 import requests
+from .config import KEY_CLIENT_ID
 
 logger = logging.getLogger("IdentityVault")
 
@@ -13,7 +14,6 @@ ACCOUNTS_FILE = os.path.join(DATA_DIR, "accounts.json")
 SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
 
 OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
-CLIENT_ID_DEFAULT = "app_EMoamEEZ73f0CkXaXp7hrann"
 DEFAULT_REFRESH_INTERVAL = 2700
 
 
@@ -230,7 +230,7 @@ class AccountPool:
         payload = {
             "grant_type": "refresh_token",
             "refresh_token": refresh_token,
-            "client_id": CLIENT_ID_DEFAULT,
+            "client_id": KEY_CLIENT_ID,
             "scope": "openid profile email offline_access",
         }
         try:
