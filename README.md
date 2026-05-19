@@ -44,6 +44,18 @@ docker compose up -d
 
 The `data/` directory is mounted as a volume, so your account pool and session cache persist across container restarts.
 
+### Option 3 — Docker Buildx (`linux/amd64`)
+
+If you want to build the image manually:
+
+```bash
+docker buildx create --name codex-openai-proxy-builder --driver docker-container --use
+docker buildx build --builder codex-openai-proxy-builder \
+  --platform linux/amd64 \
+  -t username/codex-openai-proxy:latest \
+  --push --no-cache .
+```
+
 ---
 
 ## 🖥️ Admin Dashboard
